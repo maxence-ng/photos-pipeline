@@ -2,7 +2,7 @@
 
 ## Project Status
 
-This repository is in the **pre-implementation planning phase**. The only content is a PRD and 24 spec files in `project-planning/specs/`. No Python, Docker, or web source files exist yet. Implementation follows the specs in dependency order starting from SPEC-001.
+This repository is driven by a spec-first development process. The `project-planning/specs/` directory contains feature specifications (SPEC-NNN) that describe implementation steps, acceptance criteria, and dependencies. Contributors should consult the relevant spec before implementing features; the repo's current contents may vary as work progresses.
 
 ## Architecture Overview
 
@@ -17,7 +17,7 @@ The **CLI** (`click`-based `photos-pipeline` command) and **FastAPI REST API** a
 
 **Web UI** lives in `web/` (React 18 + TypeScript + Vite + shadcn/ui), communicates with the FastAPI backend, and is served as static files via `StaticFiles` mount.
 
-## Repository Layout (to be created per SPEC-001)
+## Repository Layout (intended)
 
 ```
 src/photos_pipeline/
@@ -74,7 +74,7 @@ make build        # package build
 make docker-build # build Docker image
 ```
 
-CI (`ci.yml`) runs `pytest + ruff + mypy` on every push/PR; slow-marked tests are skipped on PRs and only run on merges to `main`.
+CI is expected to run linting and tests on push and pull requests. Slow or long-running tests may be skipped on pull requests and run only on the main branch; configure your workflow to balance fast feedback with full validation on merge.
 
 ## Key Conventions
 
