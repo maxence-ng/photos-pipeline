@@ -99,6 +99,10 @@ def test_image_record_fields() -> None:
         width=800,
         height=600,
         thumbnail=arr,
+        blur_score=321.0,
+        aesthetic_score=0.87,
+        burst_group_id="burst-123",
+        cull_reason="burst_duplicate",
     )
     assert record.path == path
     assert record.format == "jpeg"
@@ -108,6 +112,10 @@ def test_image_record_fields() -> None:
     assert record.width == 800
     assert record.height == 600
     assert record.thumbnail is arr
+    assert record.blur_score == 321.0
+    assert record.aesthetic_score == 0.87
+    assert record.burst_group_id == "burst-123"
+    assert record.cull_reason == "burst_duplicate"
 
 
 # ---------------------------------------------------------------------------

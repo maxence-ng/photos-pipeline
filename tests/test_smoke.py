@@ -26,6 +26,26 @@ def test_settings_defaults() -> None:
 
     assert settings.app_name == "photos-pipeline"
     assert settings.api_port == 8000
+    assert settings.burst_gap_seconds == 2.0
+    assert settings.burst_blur_weight == 0.6
+    assert settings.burst_aesthetic_weight == 0.4
+
+
+@pytest.mark.unit
+def test_burst_settings_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Burst-specific settings should support environment-variable overrides."""
+    monkeypatch.setenv("PHOTOS_PIPELINE_BURST_GAP_SECONDS", "1.5")
+    monkeypatch.setenv("PHOTOS_PIPELINE_BURST_BLUR_WEIGHT", "0.7")
+    monkeypatch.setenv("PHOTOS_PIPELINE_BURST_AESTHETIC_WEIGHT", "0.3")
+    get_settings.cache_clear()
+
+    try:
+        settings = get_settings()
+        assert settings.burst_gap_seconds == 1.5
+        assert settings.burst_blur_weight == 0.7
+        assert settings.burst_aesthetic_weight == 0.3
+    finally:
+        get_settings.cache_clear()
 
 
 def test_image_record_defaults(sample_workspace: Path) -> None:
@@ -38,6 +58,8 @@ def test_image_record_defaults(sample_workspace: Path) -> None:
     assert record.path == image_path
     assert record.camera_make == ""
     assert record.thumbnail is None
+    assert record.aesthetic_score is None
+    assert record.burst_group_id is None
 
 
 @pytest.mark.unit

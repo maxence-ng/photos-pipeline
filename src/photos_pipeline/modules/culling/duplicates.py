@@ -10,6 +10,8 @@ import imagehash
 import numpy as np
 from PIL import Image
 
+from photos_pipeline.modules.culling.bursts import is_burst_pair
+
 if TYPE_CHECKING:
     from photos_pipeline.modules.ingestion import ImageRecord
 
@@ -61,15 +63,8 @@ class DuplicateDetector:
         return self.ALGORITHMS[self.algorithm](pil)
 
     def _is_burst_pair(self, a: ImageRecord, b: ImageRecord) -> bool:
-        """Return True if a and b are part of a burst/bracketing sequence.
-
-        Two images are burst if BOTH have capture_datetime, they differ by more
-        than 0 seconds but less than burst_gap_seconds.
-        """
-        if a.capture_datetime is None or b.capture_datetime is None:
-            return False
-        delta = abs((a.capture_datetime - b.capture_datetime).total_seconds())
-        return 0 < delta < self.burst_gap_seconds
+        """Return True if a and b should be skipped as a burst/bracketing pair."""
+        return is_burst_pair(a, b, burst_gap_seconds=self.burst_gap_seconds)
 
     def _pick_best(self, group: list[ImageRecord]) -> ImageRecord:
         """Select the best image from a group: highest blur_score, then latest capture_datetime, then first."""

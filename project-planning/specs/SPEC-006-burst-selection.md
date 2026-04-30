@@ -1,7 +1,7 @@
 ---
 id: SPEC-006
 title: "Burst Shot Selection"
-status: todo
+status: done
 phase: mvp
 epic: culling
 priority: medium

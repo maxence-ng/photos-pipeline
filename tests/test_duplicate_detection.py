@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 import pytest
 
-from photos_pipeline.modules.culling import DuplicateDetector, DuplicateGroup
+from photos_pipeline.modules.culling import DuplicateDetector
 from photos_pipeline.modules.ingestion import ImageRecord
 
 # ---------------------------------------------------------------------------
@@ -39,9 +39,17 @@ def make_record(
     name: str = "photo.jpg",
     blur_score: float | None = None,
     capture_datetime: datetime | None = None,
+    camera_make: str = "",
+    camera_model: str = "",
     cull_reason: str | None = None,
 ) -> ImageRecord:
-    r = ImageRecord(path=Path(name), format="jpeg", thumbnail=thumbnail)
+    r = ImageRecord(
+        path=Path(name),
+        format="jpeg",
+        thumbnail=thumbnail,
+        camera_make=camera_make,
+        camera_model=camera_model,
+    )
     r.blur_score = blur_score
     r.capture_datetime = capture_datetime
     r.cull_reason = cull_reason
@@ -101,8 +109,8 @@ def test_burst_pair_not_grouped() -> None:
     t0 = datetime(2024, 1, 1, 12, 0, 0)
     t1 = datetime(2024, 1, 1, 12, 0, 1)  # Δt = 1 s < 3 s gap
     records = [
-        make_record(img.copy(), capture_datetime=t0),
-        make_record(img.copy(), capture_datetime=t1),
+        make_record(img.copy(), capture_datetime=t0, camera_make="Canon", camera_model="R5"),
+        make_record(img.copy(), capture_datetime=t1, camera_make="Canon", camera_model="R5"),
     ]
     groups = DuplicateDetector(burst_gap_seconds=3.0).process(records)
     assert groups == []
@@ -117,49 +125,80 @@ def test_bracketing_pair_not_grouped() -> None:
     t0 = datetime(2024, 1, 1, 12, 0, 0)
     t1 = t0 + timedelta(seconds=1.5)
     records = [
-        make_record(img.copy(), capture_datetime=t0),
-        make_record(img.copy(), capture_datetime=t1),
+        make_record(img.copy(), capture_datetime=t0, camera_make="Canon", camera_model="R5"),
+        make_record(img.copy(), capture_datetime=t1, camera_make="Canon", camera_model="R5"),
     ]
     groups = DuplicateDetector(burst_gap_seconds=3.0).process(records)
     assert groups == []
 
 
 @pytest.mark.unit
-def test_exact_copy_same_timestamp_grouped() -> None:
-    """Two identical images with the same capture_datetime → ARE grouped (Δt=0)."""
+def test_exact_copy_same_timestamp_not_grouped_when_same_camera() -> None:
+    """Same-camera frames with the same timestamp follow burst semantics and are skipped."""
     img = make_checkerboard()
     t = datetime(2024, 1, 1, 12, 0, 0)
     records = [
-        make_record(img.copy(), capture_datetime=t),
-        make_record(img.copy(), capture_datetime=t),
+        make_record(img.copy(), capture_datetime=t, camera_make="Canon", camera_model="R5"),
+        make_record(img.copy(), capture_datetime=t, camera_make="Canon", camera_model="R5"),
     ]
     groups = DuplicateDetector(burst_gap_seconds=3.0).process(records)
-    assert len(groups) == 1
+    assert groups == []
 
 
 @pytest.mark.unit
-def test_gap_at_burst_threshold_is_grouped() -> None:
-    """Images with Δt == burst_gap_seconds (boundary) ARE grouped (condition is strict <)."""
+def test_gap_at_burst_threshold_is_not_grouped() -> None:
+    """Images with Δt == burst_gap_seconds still count as a burst pair."""
     from datetime import timedelta
 
     img = make_checkerboard()
     t0 = datetime(2024, 1, 1, 12, 0, 0)
-    t1 = t0 + timedelta(seconds=3.0)  # Δt == burst_gap_seconds → not a burst pair
+    t1 = t0 + timedelta(seconds=3.0)
     records = [
-        make_record(img.copy(), capture_datetime=t0),
-        make_record(img.copy(), capture_datetime=t1),
+        make_record(img.copy(), capture_datetime=t0, camera_make="Canon", camera_model="R5"),
+        make_record(img.copy(), capture_datetime=t1, camera_make="Canon", camera_model="R5"),
     ]
     groups = DuplicateDetector(burst_gap_seconds=3.0).process(records)
-    assert len(groups) == 1
+    assert groups == []
 
 
 @pytest.mark.unit
-def test_missing_datetime_falls_back_to_phash() -> None:
-    """When one image has no capture_datetime, burst guard is skipped → pHash decides."""
+def test_missing_datetime_uses_mtime_fallback_for_same_camera(tmp_path: Path) -> None:
+    """Missing EXIF timestamps fall back to mtimes for same-camera burst checks."""
     img = make_checkerboard()
+    base_timestamp = 1_700_000_000.0
+    first_path = tmp_path / "first.jpg"
+    second_path = tmp_path / "second.jpg"
+    first_path.write_bytes(b"")
+    second_path.write_bytes(b"")
+    os.utime(first_path, (base_timestamp, base_timestamp))
+    os.utime(second_path, (base_timestamp + 1.0, base_timestamp + 1.0))
+
     records = [
-        make_record(img.copy(), capture_datetime=datetime(2024, 1, 1, 12, 0, 0)),
-        make_record(img.copy(), capture_datetime=None),  # missing → no burst guard
+        make_record(
+            img.copy(),
+            name=str(first_path),
+            camera_make="Canon",
+            camera_model="R5",
+        ),
+        make_record(
+            img.copy(),
+            name=str(second_path),
+            camera_make="Canon",
+            camera_model="R5",
+        ),
+    ]
+    groups = DuplicateDetector(burst_gap_seconds=3.0).process(records)
+    assert groups == []
+
+
+@pytest.mark.unit
+def test_same_timestamp_different_camera_still_groups_as_duplicate() -> None:
+    """Burst guard does not apply across different camera identities."""
+    img = make_checkerboard()
+    t = datetime(2024, 1, 1, 12, 0, 0)
+    records = [
+        make_record(img.copy(), capture_datetime=t, camera_make="Canon", camera_model="R5"),
+        make_record(img.copy(), capture_datetime=t, camera_make="Sony", camera_model="A7IV"),
     ]
     groups = DuplicateDetector(burst_gap_seconds=3.0).process(records)
     assert len(groups) == 1
