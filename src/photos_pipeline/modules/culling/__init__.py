@@ -1,3 +1,5 @@
 """Culling module package."""
 
-__all__: list[str] = []
+from photos_pipeline.modules.culling.blur import BlurDetector
+
+__all__ = ["BlurDetector"]
