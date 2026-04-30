@@ -1,7 +1,7 @@
 ---
 id: SPEC-004
 title: "Duplicate Detection (pHash)"
-status: todo
+status: done
 phase: mvp
 epic: culling
 priority: high
@@ -13,12 +13,12 @@ depends_on: ["SPEC-002"]
 As a user, I want near-identical duplicate photos detected and grouped so that only the best representative image from each duplicate cluster is kept.
 
 ## Acceptance Criteria
-- [ ] `DuplicateDetector` computes a perceptual hash (pHash) for each image thumbnail
-- [ ] Images with a Hamming distance ≤ `threshold` (default: `10`) are grouped as duplicates
-- [ ] Returns a `list[DuplicateGroup]` where each group contains the images and a nominated `best` image (sharpest by blur score)
-- [ ] Non-nominated duplicates are tagged `cull_reason: "duplicate"` in `ImageRecord`
-- [ ] Configurable hash algorithm: `phash` (default), `dhash`, `ahash` via config
-- [ ] Unit tests: two near-identical JPEG fixtures → grouped; two different images → not grouped
+- [x] `DuplicateDetector` computes a perceptual hash (pHash) for each image thumbnail
+- [x] Images with a Hamming distance ≤ `threshold` (default: `10`) are grouped as duplicates
+- [x] Returns a `list[DuplicateGroup]` where each group contains the images and a nominated `best` image (sharpest by blur score)
+- [x] Non-nominated duplicates are tagged `cull_reason: "duplicate"` in `ImageRecord`
+- [x] Configurable hash algorithm: `phash` (default), `dhash`, `ahash` via config
+- [x] Unit tests: two near-identical JPEG fixtures → grouped; two different images → not grouped
 
 ## Technical Notes
 - Use `imagehash` library (`pip install imagehash`)

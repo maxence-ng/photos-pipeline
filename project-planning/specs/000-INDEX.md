@@ -28,7 +28,7 @@
 | ✅ | [SPEC-001](SPEC-001-project-setup.md) | Project Setup & Infrastructure | infrastructure | high | M | — |
 | ✅ | [SPEC-002](SPEC-002-ingestion-module.md) | Ingestion Module | ingestion | high | M | SPEC-001 |
 | ✅ | [SPEC-003](SPEC-003-blur-detection.md) | Blur Detection (Laplacian) | culling | high | S | SPEC-002 |
-| ⬜ | [SPEC-004](SPEC-004-duplicate-detection.md) | Duplicate Detection (pHash) | culling | high | S | SPEC-002 |
+| ✅ | [SPEC-004](SPEC-004-duplicate-detection.md) | Duplicate Detection (pHash) | culling | high | S | SPEC-002 |
 | ⬜ | [SPEC-005](SPEC-005-closed-eye-detection.md) | Closed-Eye Detection | culling | medium | M | SPEC-002 |
 | ⬜ | [SPEC-006](SPEC-006-burst-selection.md) | Burst Shot Selection | culling | medium | M | SPEC-003 |
 | ⬜ | [SPEC-007](SPEC-007-aesthetic-scoring.md) | Aesthetic Scoring (NIMA) | scoring | high | L | SPEC-002 |

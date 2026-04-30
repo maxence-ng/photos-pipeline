@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     api_host: str = "127.0.0.1"
     api_port: int = Field(default=8000, ge=1, le=65535)
     blur_threshold: float = Field(default=100.0, gt=0, description="Laplacian variance threshold; images below this are flagged as blurry.")
+    duplicate_threshold: int = Field(default=10, ge=1, description="Maximum Hamming distance between two image hashes to be considered duplicates.")
+    duplicate_hash_algorithm: str = Field(default="phash", description="Perceptual hash algorithm: 'phash', 'dhash', or 'ahash'.")
+    duplicate_burst_gap_seconds: float = Field(default=3.0, ge=0, description="Two images whose timestamps differ by more than 0 and less than this value (seconds) are treated as burst/bracketing shots and are never considered duplicates.")
 
 
 @lru_cache(maxsize=1)
