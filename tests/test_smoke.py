@@ -43,8 +43,8 @@ def test_image_record_defaults(sample_workspace: Path) -> None:
 @pytest.mark.unit
 def test_subpackages_are_importable() -> None:
     """All module sub-packages should be importable (covers stub __init__ files)."""
-    from photos_pipeline.modules import correction, culling, export, scoring  # noqa: F401
     from photos_pipeline import utils  # noqa: F401
+    from photos_pipeline.modules import correction, culling, export, scoring  # noqa: F401
 
     assert isinstance(culling.__all__, list)
     assert isinstance(correction.__all__, list)
