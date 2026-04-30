@@ -117,3 +117,12 @@ All modules pass `ImageRecord` objects (a `dataclass` or Pydantic `BaseModel`). 
 
 Update this file or create a new instruction file with `applyTo` patterns as the project evolves. Add new conventions, architectural notes or best practices here to guide future contributors and maintain consistency.
 
+### Post-Implementation Instructions Agent
+
+After completing a non-trivial implementation, invoke the post-impl instructions agent to capture any new conventions or gotchas. See `.github/agents/post-impl-instructions.md` for the full prompt template and invocation rules.
+
+**Invoke when:** a new module/pattern/integration was added, or a non-obvious constraint was discovered.  
+**Skip when:** small fixes, doc edits, or anything already covered by existing instruction files.
+
+Scoped instruction files live in `.github/instructions/` with `applyTo` set as narrowly as possible.
+
