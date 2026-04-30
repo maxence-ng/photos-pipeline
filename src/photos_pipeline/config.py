@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     api_host: str = "127.0.0.1"
     api_port: int = Field(default=8000, ge=1, le=65535)
+    blur_threshold: float = Field(default=100.0, gt=0, description="Laplacian variance threshold; images below this are flagged as blurry.")
 
 
 @lru_cache(maxsize=1)

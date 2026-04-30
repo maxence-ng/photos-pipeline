@@ -35,6 +35,8 @@ class ImageRecord:
     width: int = 0
     height: int = 0
     thumbnail: np.ndarray | None = field(default=None, repr=False)
+    blur_score: float | None = field(default=None)
+    cull_reason: str | None = field(default=None)
 
     # Legacy alias kept for backward compatibility with early smoke tests
     @property

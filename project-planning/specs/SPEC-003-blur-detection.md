@@ -1,7 +1,7 @@
 ---
 id: SPEC-003
 title: "Blur Detection (Laplacian Variance)"
-status: todo
+status: done
 phase: mvp
 epic: culling
 priority: high
