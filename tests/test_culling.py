@@ -70,3 +70,57 @@ def test_imagerecord_blur_fields() -> None:
     record.cull_reason = "too blurry"
     assert record.blur_score == 42.5
     assert record.cull_reason == "too blurry"
+
+
+@pytest.mark.unit
+def test_process_sets_blur_score_on_sharp(sharp_image: np.ndarray) -> None:
+    record = ImageRecord(path=Path("photo.jpg"), format="jpeg", thumbnail=sharp_image)
+    BlurDetector().process(record)
+    assert record.blur_score is not None
+    assert record.blur_score > 200
+    assert record.cull_reason is None  # sharp — not culled
+
+
+@pytest.mark.unit
+def test_process_sets_cull_reason_on_blurry(blurry_image: np.ndarray) -> None:
+    record = ImageRecord(path=Path("photo.jpg"), format="jpeg", thumbnail=blurry_image)
+    BlurDetector().process(record)
+    assert record.blur_score is not None
+    assert record.blur_score < 50
+    assert record.cull_reason == "blur"
+
+
+@pytest.mark.unit
+def test_process_raises_without_thumbnail() -> None:
+    record = ImageRecord(path=Path("photo.jpg"), format="jpeg")
+    with pytest.raises(ValueError, match="No thumbnail"):
+        BlurDetector().process(record)
+
+
+@pytest.mark.unit
+def test_config_default_threshold() -> None:
+    """BlurDetector picks up blur_threshold from config (env-var wiring)."""
+    import os
+    from photos_pipeline.config import get_settings
+
+    # Patch via env var; clear lru_cache so the new value is read
+    original = os.environ.get("PHOTOS_PIPELINE_BLUR_THRESHOLD")
+    os.environ["PHOTOS_PIPELINE_BLUR_THRESHOLD"] = "42.0"
+    get_settings.cache_clear()
+    try:
+        assert BlurDetector().threshold == 42.0
+    finally:
+        if original is None:
+            del os.environ["PHOTOS_PIPELINE_BLUR_THRESHOLD"]
+        else:
+            os.environ["PHOTOS_PIPELINE_BLUR_THRESHOLD"] = original
+        get_settings.cache_clear()
+
+
+@pytest.mark.unit
+def test_process_clears_stale_blur_reason(sharp_image: np.ndarray) -> None:
+    """process() clears cull_reason='blur' when image is no longer blurry."""
+    record = ImageRecord(path=Path("photo.jpg"), format="jpeg", thumbnail=sharp_image)
+    record.cull_reason = "blur"  # simulate a previous pass
+    BlurDetector().process(record)
+    assert record.cull_reason is None
