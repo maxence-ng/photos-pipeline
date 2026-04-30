@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import io
 import logging
+import sys
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
@@ -17,6 +19,8 @@ from photos_pipeline.modules.ingestion import (
     SUPPORTED_EXTENSIONS,
     ImageRecord,
     Ingester,
+    _parse_exif_datetime,
+    _extract_raw_record,
 )
 
 # ---------------------------------------------------------------------------
@@ -255,3 +259,169 @@ def test_scan_recursive_finds_all(tmp_path: Path) -> None:
     records = Ingester().scan(tmp_path, recursive=True)
     names = {r.path.name for r in records}
     assert names == {"a.jpg", "b.jpg"}
+
+
+# ---------------------------------------------------------------------------
+# _parse_exif_datetime — exception branch
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_parse_exif_datetime_valid() -> None:
+    assert _parse_exif_datetime("2024:06:15 10:30:00") == datetime(2024, 6, 15, 10, 30, 0)
+
+
+@pytest.mark.unit
+def test_parse_exif_datetime_invalid_returns_none() -> None:
+    """Malformed datetime string should return None without raising."""
+    assert _parse_exif_datetime("not-a-date") is None
+    assert _parse_exif_datetime("") is None
+
+
+# ---------------------------------------------------------------------------
+# scan() — exception paths (JPEG and RAW)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_scan_jpeg_exception_is_skipped(tmp_path: Path, mocker) -> None:
+    """If _extract_jpeg_record raises, the file is skipped with a warning."""
+    _make_jpeg(tmp_path / "bad.jpg")
+    mocker.patch(
+        "photos_pipeline.modules.ingestion._extract_jpeg_record",
+        side_effect=OSError("simulated read error"),
+    )
+    records = Ingester().scan(tmp_path)
+    assert records == []
+
+
+@pytest.mark.unit
+def test_scan_raw_exception_is_skipped(tmp_path: Path, mocker) -> None:
+    """If _extract_raw_record raises, the file is skipped with a warning."""
+    (tmp_path / "photo.nef").write_bytes(b"fake raw")
+    mocker.patch(
+        "photos_pipeline.modules.ingestion._extract_raw_record",
+        side_effect=RuntimeError("simulated raw error"),
+    )
+    records = Ingester().scan(tmp_path)
+    assert records == []
+
+
+# ---------------------------------------------------------------------------
+# _extract_raw_record — mocked rawpy paths
+# ---------------------------------------------------------------------------
+
+
+def _make_rawpy_mock(thumb_format: str = "jpeg") -> MagicMock:
+    """Build a minimal rawpy mock with a configurable thumbnail format."""
+
+    class _FakeNoThumbnailError(Exception):
+        pass
+
+    mock_rawpy = MagicMock()
+    mock_rawpy.LibRawNoThumbnailError = _FakeNoThumbnailError
+
+    mock_raw = MagicMock()
+    mock_raw.sizes.width = 4000
+    mock_raw.sizes.height = 3000
+
+    if thumb_format == "jpeg":
+        buf = io.BytesIO()
+        Image.new("RGB", (400, 300)).save(buf, format="JPEG")
+        mock_thumb = MagicMock()
+        mock_thumb.format = mock_rawpy.ThumbFormat.JPEG
+        mock_thumb.data = buf.getvalue()
+        mock_raw.extract_thumb.return_value = mock_thumb
+    elif thumb_format == "bitmap":
+        mock_thumb = MagicMock()
+        mock_thumb.format = mock_rawpy.ThumbFormat.BITMAP
+        mock_thumb.data = np.zeros((100, 100, 3), dtype=np.uint8)
+        mock_raw.extract_thumb.return_value = mock_thumb
+    elif thumb_format == "none":
+        mock_raw.extract_thumb.side_effect = _FakeNoThumbnailError("no thumb")
+
+    mock_rawpy.imread.return_value.__enter__ = lambda _self: mock_raw
+    mock_rawpy.imread.return_value.__exit__ = MagicMock(return_value=False)
+
+    return mock_rawpy
+
+
+@pytest.mark.unit
+def test_extract_raw_record_jpeg_thumb(tmp_path: Path, monkeypatch) -> None:
+    """_extract_raw_record returns a record with thumbnail when rawpy yields a JPEG thumb."""
+    raw_path = tmp_path / "photo.nef"
+    raw_path.write_bytes(b"fake raw content")
+
+    mock_rawpy = _make_rawpy_mock("jpeg")
+    monkeypatch.setitem(sys.modules, "rawpy", mock_rawpy)
+
+    record = _extract_raw_record(raw_path)
+
+    assert record.format == "raw"
+    assert record.width == 4000
+    assert record.height == 3000
+    assert record.thumbnail is not None
+    assert record.thumbnail.shape[2] == 3
+
+
+@pytest.mark.unit
+def test_extract_raw_record_bitmap_thumb(tmp_path: Path, monkeypatch) -> None:
+    """_extract_raw_record handles a BITMAP thumbnail from rawpy."""
+    raw_path = tmp_path / "photo.orf"
+    raw_path.write_bytes(b"fake raw content")
+
+    mock_rawpy = _make_rawpy_mock("bitmap")
+    monkeypatch.setitem(sys.modules, "rawpy", mock_rawpy)
+
+    record = _extract_raw_record(raw_path)
+
+    assert record.thumbnail is not None
+
+
+@pytest.mark.unit
+def test_extract_raw_record_no_thumb(tmp_path: Path, monkeypatch) -> None:
+    """_extract_raw_record returns a record with thumbnail=None when rawpy has no thumb."""
+    raw_path = tmp_path / "photo.cr2"
+    raw_path.write_bytes(b"fake raw content")
+
+    mock_rawpy = _make_rawpy_mock("none")
+    monkeypatch.setitem(sys.modules, "rawpy", mock_rawpy)
+
+    record = _extract_raw_record(raw_path)
+
+    assert record.thumbnail is None
+    assert record.width == 4000
+
+
+@pytest.mark.unit
+def test_extract_raw_record_rawpy_open_fails(tmp_path: Path, monkeypatch) -> None:
+    """_extract_raw_record returns an empty record when rawpy.imread raises."""
+    raw_path = tmp_path / "photo.arw"
+    raw_path.write_bytes(b"not a raw file")
+
+    mock_rawpy = MagicMock()
+    mock_rawpy.imread.side_effect = Exception("not a RAW file")
+    monkeypatch.setitem(sys.modules, "rawpy", mock_rawpy)
+
+    record = _extract_raw_record(raw_path)
+
+    assert record.format == "raw"
+    assert record.width == 0
+    assert record.thumbnail is None
+
+
+@pytest.mark.unit
+def test_scan_raw_file_produces_record(tmp_path: Path, monkeypatch) -> None:
+    """scan() calls _extract_raw_record for RAW extensions and includes the result."""
+    raw_path = tmp_path / "shot.nef"
+    raw_path.write_bytes(b"fake raw content")
+
+    mock_rawpy = _make_rawpy_mock("jpeg")
+    monkeypatch.setitem(sys.modules, "rawpy", mock_rawpy)
+
+    records = Ingester().scan(tmp_path)
+
+    assert len(records) == 1
+    assert records[0].format == "raw"
+    assert records[0].path == raw_path
+
