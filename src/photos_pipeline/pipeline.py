@@ -22,6 +22,7 @@ class Pipeline:
 
     def run(self, input_path: Path, output_path: Path) -> PipelineResult:
         """Run the photo pipeline."""
+        # TODO: instantiate BlurDetector(threshold=get_settings().blur_threshold) here for culling stage
         raise NotImplementedError(
             f"Pipeline execution is defined in later specs: {input_path} -> {output_path}."
         )

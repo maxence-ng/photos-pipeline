@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import math
+from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
+
+if TYPE_CHECKING:
+    from photos_pipeline.modules.ingestion import ImageRecord
 
 __all__ = ["BlurDetector"]
 
@@ -13,7 +17,10 @@ __all__ = ["BlurDetector"]
 class BlurDetector:
     """Detect blur via Laplacian variance on a greyscale centre crop."""
 
-    def __init__(self, threshold: float = 100.0) -> None:
+    def __init__(self, threshold: float | None = None) -> None:
+        if threshold is None:
+            from photos_pipeline.config import get_settings
+            threshold = get_settings().blur_threshold
         self.threshold = threshold
 
     def score(self, image: np.ndarray) -> float:
@@ -33,3 +40,20 @@ class BlurDetector:
         """Return ``True`` if *image* is blurry (score below threshold)."""
         t = threshold if threshold is not None else self.threshold
         return self.score(image) < t
+
+    def process(self, record: ImageRecord) -> ImageRecord:
+        """Populate *record* blur fields; sets cull_reason if blurry.
+
+        Uses record.thumbnail if available, otherwise raises ValueError.
+        """
+        from photos_pipeline.modules.ingestion import ImageRecord  # avoid circular import  # noqa: F811, PLC0415
+
+        if record.thumbnail is None:
+            raise ValueError(f"No thumbnail available for {record.path}")
+        record.blur_score = self.score(record.thumbnail)
+        if self.is_blurry(record.thumbnail):
+            record.cull_reason = "blur"
+        elif record.cull_reason == "blur":
+            # Clear stale cull reason from a previous pass
+            record.cull_reason = None
+        return record
