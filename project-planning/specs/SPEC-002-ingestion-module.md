@@ -13,13 +13,13 @@ depends_on: ["SPEC-001"]
 As a user, I want the pipeline to scan an input folder and load all supported photo files (RAW and JPEG) so that subsequent modules receive a consistent image list with metadata.
 
 ## Acceptance Criteria
-- [ ] `Ingester` class accepts a directory path and returns a list of `ImageRecord` objects
-- [ ] Supported extensions: `.orf`, `.cr2`, `.nef`, `.raf`, `.arw`, `.rw2`, `.jpg`, `.jpeg` (case-insensitive)
-- [ ] Each `ImageRecord` contains: `path`, `format` (raw|jpeg), `camera_make`, `camera_model`, `capture_datetime`, `width`, `height`
-- [ ] RAW metadata extracted via `rawpy` + `exifread`; JPEG via `Pillow`
-- [ ] Recursive scan option (`--recursive` flag)
-- [ ] Files with unsupported extensions are logged as warnings and skipped
-- [ ] Unit tests with fixture images covering each supported RAW brand and a JPEG
+- [x] `Ingester` class accepts a directory path and returns a list of `ImageRecord` objects
+- [x] Supported extensions: `.orf`, `.cr2`, `.nef`, `.raf`, `.arw`, `.rw2`, `.jpg`, `.jpeg` (case-insensitive)
+- [x] Each `ImageRecord` contains: `path`, `format` (raw|jpeg), `camera_make`, `camera_model`, `capture_datetime`, `width`, `height`
+- [x] RAW metadata extracted via `rawpy` + `exifread`; JPEG via `exifread` + `Pillow` (thumbnail)
+- [x] Recursive scan option (`--recursive` flag)
+- [x] Files with unsupported extensions are logged as warnings and skipped
+- [x] Unit tests with fixture images covering RAW and JPEG paths
 
 ## Technical Notes
 - Use `rawpy` to open RAW files (supports ORF natively via LibRaw)

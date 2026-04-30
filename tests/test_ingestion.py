@@ -7,6 +7,7 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import numpy as np
@@ -320,6 +321,7 @@ def _make_rawpy_mock(thumb_format: str = "jpeg") -> MagicMock:
 
     mock_rawpy = MagicMock()
     mock_rawpy.LibRawNoThumbnailError = _FakeNoThumbnailError
+    mock_rawpy.ThumbFormat = SimpleNamespace(JPEG="jpeg", BITMAP="bitmap")
 
     mock_raw = MagicMock()
     mock_raw.sizes.width = 4000
@@ -340,8 +342,8 @@ def _make_rawpy_mock(thumb_format: str = "jpeg") -> MagicMock:
     elif thumb_format == "none":
         mock_raw.extract_thumb.side_effect = _FakeNoThumbnailError("no thumb")
 
-    mock_rawpy.imread.return_value.__enter__ = lambda _self: mock_raw
-    mock_rawpy.imread.return_value.__exit__ = MagicMock(return_value=False)
+    mock_rawpy.imread.return_value.__enter__.return_value = mock_raw
+    mock_rawpy.imread.return_value.__exit__.return_value = False
 
     return mock_rawpy
 
@@ -395,7 +397,7 @@ def test_extract_raw_record_no_thumb(tmp_path: Path, monkeypatch) -> None:
 
 @pytest.mark.unit
 def test_extract_raw_record_rawpy_open_fails(tmp_path: Path, monkeypatch) -> None:
-    """_extract_raw_record returns an empty record when rawpy.imread raises."""
+    """_extract_raw_record re-raises when rawpy.imread raises so scan() can skip the file."""
     raw_path = tmp_path / "photo.arw"
     raw_path.write_bytes(b"not a raw file")
 
@@ -403,11 +405,8 @@ def test_extract_raw_record_rawpy_open_fails(tmp_path: Path, monkeypatch) -> Non
     mock_rawpy.imread.side_effect = Exception("not a RAW file")
     monkeypatch.setitem(sys.modules, "rawpy", mock_rawpy)
 
-    record = _extract_raw_record(raw_path)
-
-    assert record.format == "raw"
-    assert record.width == 0
-    assert record.thumbnail is None
+    with pytest.raises(Exception, match="not a RAW file"):
+        _extract_raw_record(raw_path)
 
 
 @pytest.mark.unit

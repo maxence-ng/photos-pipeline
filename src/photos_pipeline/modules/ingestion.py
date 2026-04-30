@@ -49,7 +49,7 @@ class ImageRecord:
         }
 
     @property
-    def thumbnail_path(self) -> None:  # pragma: no cover
+    def thumbnail_path(self) -> Path | None:  # pragma: no cover
         return None
 
 
@@ -133,6 +133,7 @@ def _extract_raw_record(path: Path) -> ImageRecord:
                 logger.debug("No embedded thumbnail in %s", path.name)
     except Exception as exc:  # noqa: BLE001
         logger.warning("Could not open RAW file %s: %s", path.name, exc)
+        raise
 
     return ImageRecord(
         path=path,

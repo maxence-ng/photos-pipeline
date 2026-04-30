@@ -29,7 +29,7 @@ def test_settings_defaults() -> None:
 
 
 def test_image_record_defaults(sample_workspace: Path) -> None:
-    """ImageRecord should capture source paths and empty metadata by default."""
+    """ImageRecord with minimal args should have empty camera_make and no thumbnail."""
     image_path = sample_workspace / "image.jpg"
     image_path.write_bytes(b"")
 
