@@ -1,7 +1,7 @@
 ---
 id: SPEC-002
 title: "Ingestion Module"
-status: todo
+status: done
 phase: mvp
 epic: ingestion
 priority: high

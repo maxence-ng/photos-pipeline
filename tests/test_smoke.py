@@ -32,8 +32,8 @@ def test_image_record_defaults(sample_workspace: Path) -> None:
     image_path = sample_workspace / "image.jpg"
     image_path.write_bytes(b"")
 
-    record = ImageRecord(source_path=image_path)
+    record = ImageRecord(path=image_path, format="jpeg")
 
-    assert record.source_path == image_path
-    assert record.metadata == {}
-    assert record.thumbnail_path is None
+    assert record.path == image_path
+    assert record.camera_make == ""
+    assert record.thumbnail is None
