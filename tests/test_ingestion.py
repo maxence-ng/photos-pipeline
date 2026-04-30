@@ -14,11 +14,11 @@ import pytest
 from PIL import Image
 
 from photos_pipeline.modules.ingestion import (
-    ImageRecord,
-    Ingester,
     JPEG_EXTENSIONS,
     RAW_EXTENSIONS,
     SUPPORTED_EXTENSIONS,
+    ImageRecord,
+    Ingester,
     _extract_raw_record,
     _parse_exif_datetime,
 )
