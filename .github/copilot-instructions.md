@@ -4,6 +4,8 @@
 
 This repository is driven by a spec-first development process. The `project-planning/specs/` directory contains feature specifications (SPEC-NNN) that describe implementation steps, acceptance criteria, and dependencies. Contributors should consult the relevant spec before implementing features; the repo's current contents may vary as work progresses.
 
+Current status of the project is tracked in `project-planning/specs/000-INDEX.md`, which lists all specs with their status (`todo`, `in-progress`, `done`).
+
 ## Architecture Overview
 
 An automated photo post-processing pipeline with four processing stages in sequence:
