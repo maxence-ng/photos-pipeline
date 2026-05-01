@@ -34,7 +34,7 @@
 | ✅ | [SPEC-007](SPEC-007-aesthetic-scoring.md) | Aesthetic Scoring (NIMA) | scoring | high | L | SPEC-002 |
 | ✅ | [SPEC-008](SPEC-008-darktable-cli.md) | Darktable CLI Integration | correction | high | M | SPEC-002 |
 | 🔵 | [SPEC-009](SPEC-009-style-presets.md) | Style Presets Management | correction | high | M | SPEC-008 |
-| ⬜ | [SPEC-010](SPEC-010-cli-interface.md) | Basic CLI Interface | interface-cli | high | M | SPEC-003, SPEC-004, SPEC-007, SPEC-008 |
+| ✅ | [SPEC-010](SPEC-010-cli-interface.md) | Basic CLI Interface | interface-cli | high | M | SPEC-003, SPEC-004, SPEC-007, SPEC-008 |
 | ⬜ | [SPEC-011](SPEC-011-jpeg-export.md) | JPEG Export (basic) | export | high | S | SPEC-008 |
 
 ## Phase 2 — Intermediate

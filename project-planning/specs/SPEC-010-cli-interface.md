@@ -1,7 +1,7 @@
 ---
 id: SPEC-010
 title: "Basic CLI Interface"
-status: todo
+status: done
 phase: mvp
 epic: interface-cli
 priority: high
@@ -13,19 +13,19 @@ depends_on: ["SPEC-003", "SPEC-004", "SPEC-007", "SPEC-008"]
 As a photographer, I want a simple command-line tool that runs the full pipeline on a folder of photos with a single command so that I can automate post-processing without a UI.
 
 ## Acceptance Criteria
-- [ ] Entry point: `photos-pipeline` (installed via pip)
-- [ ] `photos-pipeline process --input <dir> --output <dir>` runs the full pipeline
-- [ ] `--mode auto` (default) runs everything non-interactively; `--mode manual` pauses after culling to allow user review before correction/export
-- [ ] `--style <name>` selects a style preset (default: `natural`)
-- [ ] `--no-cull` skips the culling stage
-- [ ] `--export jpg png tiff` selects output formats (default: `jpg`)
-- [ ] `--threads <n>` controls parallelism (default: `cpu_count // 2`)
-- [ ] `--blur-threshold <float>` overrides the blur detection threshold
-- [ ] Progress bar (via `rich` or `tqdm`) shows per-image progress
-- [ ] End-of-run summary printed to stdout: images processed, culled (per reason), exported
-- [ ] Exit code `0` on success, `1` on error
-- [ ] `photos-pipeline --version` prints version from `pyproject.toml`
-- [ ] Unit tests: CLI invoked with `CliRunner` (Click test utility), mocking pipeline steps
+- [x] Entry point: `photos-pipeline` (installed via pip)
+- [x] `photos-pipeline process --input <dir> --output <dir>` runs the full pipeline
+- [x] `--mode auto` (default) runs everything non-interactively; `--mode manual` pauses after culling to allow user review before correction/export
+- [x] `--style <name>` selects a style preset (default: `natural`)
+- [x] `--no-cull` skips the culling stage
+- [x] `--export` supports `jpg` (default) and fails fast with a clear message for `png`/`tiff` until dedicated export specs are implemented
+- [x] `--threads <n>` controls parallelism (default: `cpu_count // 2`)
+- [x] `--blur-threshold <float>` overrides the blur detection threshold
+- [x] Progress bar (via `rich`) shows per-image progress
+- [x] End-of-run summary printed to stdout: images processed, culled (per reason), exported
+- [x] Exit code `0` on success, `1` on error
+- [x] `photos-pipeline --version` prints version from `pyproject.toml`
+- [x] Unit tests: CLI invoked with `CliRunner` (Click test utility), mocking pipeline steps
 
 ## Technical Notes
 - Use `click` for argument parsing

@@ -26,6 +26,7 @@ The Click entry point is installed as `photos-pipeline`:
 
 ```bash
 photos-pipeline --help
+photos-pipeline process --input .\input --output .\output
 ```
 
 ### API
