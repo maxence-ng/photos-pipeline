@@ -101,6 +101,7 @@ def test_process_raises_without_thumbnail() -> None:
 def test_config_default_threshold() -> None:
     """BlurDetector picks up blur_threshold from config (env-var wiring)."""
     import os
+
     from photos_pipeline.config import get_settings
 
     # Patch via env var; clear lru_cache so the new value is read

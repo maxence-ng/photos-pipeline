@@ -1,7 +1,7 @@
 ---
 id: SPEC-008
 title: "Darktable CLI Integration"
-status: todo
+status: in-progress
 phase: mvp
 epic: correction
 priority: high
@@ -13,14 +13,14 @@ depends_on: ["SPEC-002"]
 As a user, I want RAW files developed and exported with professional-grade processing (Darktable) so that the output quality matches what a photographer would produce manually.
 
 ## Acceptance Criteria
-- [ ] `DarktableRunner.process(input: Path, output: Path, style: str | None, params: dict) -> Path` calls `darktable-cli` and returns the output path
+- [x] `DarktableRunner.process(input: Path, output: Path, style: str | None, params: dict) -> Path` calls `darktable-cli` and returns the output path
 - [ ] Supports all RAW formats from SPEC-002 (ORF, CR2, NEF, RAF, ARW, RW2) as well as JPEG
-- [ ] `--style` parameter passes a named Darktable style if specified
-- [ ] `--apply-custom-presets false` is set by default to avoid applying user's local presets unexpectedly
-- [ ] Timeout configurable (default: 60 s per image); process is killed and error logged on timeout
-- [ ] If `darktable-cli` is not found on PATH, raise `DarktableNotFoundError` with install instructions
-- [ ] Darktable version ≥ 4.0 required; version is checked at startup
-- [ ] Unit tests: mock subprocess, verify correct CLI flags are assembled
+- [x] `--style` parameter passes a named Darktable style if specified
+- [x] `--apply-custom-presets false` is set by default to avoid applying user's local presets unexpectedly
+- [x] Timeout configurable (default: 60 s per image); process is killed and error logged on timeout
+- [x] If `darktable-cli` is not found on PATH, raise `DarktableNotFoundError` with install instructions
+- [x] Darktable version ≥ 4.0 required; version is checked at startup
+- [x] Unit tests: mock subprocess, verify correct CLI flags are assembled
 
 ## Technical Notes
 - Darktable CLI invocation pattern:

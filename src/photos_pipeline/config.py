@@ -19,8 +19,14 @@ DEFAULT_SCORER_WEIGHTS_URL = (
 DEFAULT_SCORER_CLIP_MODEL_NAME = "openai/clip-vit-base-patch32"
 DEFAULT_SCORER_BATCH_SIZE = 16
 DEFAULT_SCORER_DEVICE = "auto"
+DEFAULT_DARKTABLE_BINARY = "darktable-cli"
+DEFAULT_DARKTABLE_TIMEOUT_SECONDS = 60
+DEFAULT_DARKTABLE_MIN_VERSION = "4.0"
 
 __all__ = [
+    "DEFAULT_DARKTABLE_BINARY",
+    "DEFAULT_DARKTABLE_MIN_VERSION",
+    "DEFAULT_DARKTABLE_TIMEOUT_SECONDS",
     "DEFAULT_SCORER_BATCH_SIZE",
     "DEFAULT_SCORER_CLIP_MODEL_NAME",
     "DEFAULT_SCORER_DEVICE",
@@ -78,6 +84,23 @@ class Settings(BaseSettings):
     scorer_device: str = Field(
         default=DEFAULT_SCORER_DEVICE,
         description="Preferred inference device ('auto', 'cpu', 'cuda', etc.).",
+    )
+    darktable_binary: str = Field(
+        default=DEFAULT_DARKTABLE_BINARY,
+        description="Executable name used to locate darktable-cli on PATH.",
+    )
+    darktable_binary_path: Path | None = Field(
+        default=None,
+        description="Optional absolute path override for the darktable-cli executable.",
+    )
+    darktable_timeout_seconds: int = Field(
+        default=DEFAULT_DARKTABLE_TIMEOUT_SECONDS,
+        ge=1,
+        description="Maximum number of seconds to allow per darktable-cli invocation.",
+    )
+    darktable_min_version: str = Field(
+        default=DEFAULT_DARKTABLE_MIN_VERSION,
+        description="Minimum supported Darktable version string.",
     )
 
 

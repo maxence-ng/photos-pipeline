@@ -46,7 +46,9 @@ class BlurDetector:
 
         Uses record.thumbnail if available, otherwise raises ValueError.
         """
-        from photos_pipeline.modules.ingestion import ImageRecord  # avoid circular import  # noqa: F811, PLC0415
+        from photos_pipeline.modules.ingestion import (
+            ImageRecord,  # avoid circular import  # noqa: F401, F811, PLC0415
+        )
 
         if record.thumbnail is None:
             raise ValueError(f"No thumbnail available for {record.path}")
