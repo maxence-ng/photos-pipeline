@@ -1,7 +1,7 @@
 ---
 id: SPEC-008
 title: "Darktable CLI Integration"
-status: in-progress
+status: done
 phase: mvp
 epic: correction
 priority: high
@@ -14,7 +14,7 @@ As a user, I want RAW files developed and exported with professional-grade proce
 
 ## Acceptance Criteria
 - [x] `DarktableRunner.process(input: Path, output: Path, style: str | None, params: dict) -> Path` calls `darktable-cli` and returns the output path
-- [ ] Supports all RAW formats from SPEC-002 (ORF, CR2, NEF, RAF, ARW, RW2) as well as JPEG
+- [x] Supports all RAW formats from SPEC-002 (ORF, CR2, NEF, RAF, ARW, RW2) as well as JPEG
 - [x] `--style` parameter passes a named Darktable style if specified
 - [x] `--apply-custom-presets false` is set by default to avoid applying user's local presets unexpectedly
 - [x] Timeout configurable (default: 60 s per image); process is killed and error logged on timeout

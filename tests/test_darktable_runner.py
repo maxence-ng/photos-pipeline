@@ -9,13 +9,17 @@ import pytest
 
 from photos_pipeline.config import get_settings
 from photos_pipeline.modules.correction import (
+    DARKTABLE_SUPPORTED_EXTENSIONS,
     DARKTABLE_SUPPORTED_PARAMS,
     DarktableNotFoundError,
     DarktableProcessError,
     DarktableRunner,
     DarktableTimeoutError,
+    DarktableUnsupportedFormatError,
     DarktableVersionError,
+    supports_darktable_input,
 )
+from photos_pipeline.modules.ingestion import SUPPORTED_EXTENSIONS
 
 
 def _completed_process(
@@ -118,6 +122,66 @@ def test_runner_raises_for_unsupported_version(mocker, tmp_path: Path) -> None:
 @pytest.mark.unit
 def test_supported_params_are_stable() -> None:
     assert DARKTABLE_SUPPORTED_PARAMS == ("xmp", "width", "height", "hq")
+
+
+@pytest.mark.unit
+def test_supported_extensions_are_reused_from_ingestion() -> None:
+    assert DARKTABLE_SUPPORTED_EXTENSIONS == SUPPORTED_EXTENSIONS
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "suffix",
+    [".orf", ".cr2", ".nef", ".raf", ".arw", ".rw2", ".jpg", ".jpeg", ".JpEg", ".NeF"],
+)
+def test_supports_darktable_input_recognises_supported_extensions(suffix: str) -> None:
+    assert supports_darktable_input(Path(f"image{suffix}")) is True
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("suffix", [".txt", ".png", "", ".xmp"])
+def test_supports_darktable_input_rejects_unsupported_extensions(suffix: str) -> None:
+    assert supports_darktable_input(Path(f"image{suffix}")) is False
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("suffix", [".orf", ".cr2", ".nef", ".raf", ".arw", ".rw2", ".jpg", ".jpeg"])
+def test_process_accepts_each_supported_extension(mocker, tmp_path: Path, suffix: str) -> None:
+    binary_path = tmp_path / "darktable-cli"
+    binary_path.write_text("", encoding="utf-8")
+    input_path = tmp_path / f"input{suffix}"
+    output_path = tmp_path / "output.jpg"
+    mock_run = mocker.patch(
+        "photos_pipeline.modules.correction.darktable.subprocess.run",
+        side_effect=[
+            _completed_process([str(binary_path), "--version"], stdout="darktable-cli 4.8.1"),
+            _completed_process([str(binary_path), str(input_path), str(output_path)]),
+        ],
+    )
+
+    runner = DarktableRunner(binary=binary_path)
+
+    assert runner.process(input_path, output_path) == output_path
+    assert mock_run.call_args_list[1].args[0][1] == str(input_path)
+
+
+@pytest.mark.unit
+def test_process_rejects_unsupported_input_extension(mocker, tmp_path: Path) -> None:
+    binary_path = tmp_path / "darktable-cli"
+    binary_path.write_text("", encoding="utf-8")
+    mock_run = mocker.patch(
+        "photos_pipeline.modules.correction.darktable.subprocess.run",
+        return_value=_completed_process(
+            [str(binary_path), "--version"],
+            stdout="darktable-cli 4.8.1",
+        ),
+    )
+    runner = DarktableRunner(binary=binary_path)
+
+    with pytest.raises(DarktableUnsupportedFormatError, match="Unsupported input format"):
+        runner.process(tmp_path / "input.txt", tmp_path / "output.jpg")
+
+    assert mock_run.call_count == 1
 
 
 @pytest.mark.unit

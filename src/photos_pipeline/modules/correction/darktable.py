@@ -11,20 +11,25 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from photos_pipeline.config import Settings, get_settings
+from photos_pipeline.modules.ingestion import SUPPORTED_EXTENSIONS
 
 __all__ = [
     "DARKTABLE_SUPPORTED_PARAMS",
+    "DARKTABLE_SUPPORTED_EXTENSIONS",
     "DarktableError",
     "DarktableNotFoundError",
     "DarktableProcessError",
     "DarktableRunner",
     "DarktableTimeoutError",
+    "DarktableUnsupportedFormatError",
     "DarktableVersionError",
+    "supports_darktable_input",
 ]
 
 logger = logging.getLogger(__name__)
 
 DARKTABLE_SUPPORTED_PARAMS: tuple[str, ...] = ("xmp", "width", "height", "hq")
+DARKTABLE_SUPPORTED_EXTENSIONS: frozenset[str] = SUPPORTED_EXTENSIONS
 
 _VERSION_PATTERN = re.compile(r"(?P<major>\d+)\.(?P<minor>\d+)(?:\.(?P<patch>\d+))?")
 _WINDOWS_DARKTABLE_PATHS: tuple[Path, ...] = (
@@ -58,6 +63,10 @@ class DarktableTimeoutError(DarktableError):
     """Raised when a darktable-cli invocation exceeds the configured timeout."""
 
 
+class DarktableUnsupportedFormatError(DarktableError):
+    """Raised when a file extension is unsupported by the Darktable runner."""
+
+
 def _parse_version(value: str) -> tuple[int, int, int]:
     match = _VERSION_PATTERN.search(value)
     if match is None:
@@ -78,6 +87,11 @@ def _not_found_message(binary_name: str) -> str:
         "Install Darktable 4.0+ and ensure darktable-cli is on PATH, or set "
         "PHOTOS_PIPELINE_DARKTABLE_BINARY_PATH to the executable location."
     )
+
+
+def supports_darktable_input(path: Path) -> bool:
+    """Return ``True`` when *path* uses a supported RAW/JPEG extension."""
+    return path.suffix.lower() in DARKTABLE_SUPPORTED_EXTENSIONS
 
 
 class DarktableRunner:
@@ -110,6 +124,7 @@ class DarktableRunner:
         params: Mapping[str, object] | None = None,
     ) -> Path:
         """Process *input* into *output* via ``darktable-cli``."""
+        self._validate_input_path(input)
         command = self._build_process_command(input=input, output=output, style=style, params=params)
 
         try:
@@ -139,6 +154,17 @@ class DarktableRunner:
             )
 
         return output
+
+    @staticmethod
+    def _validate_input_path(input_path: Path) -> None:
+        if supports_darktable_input(input_path):
+            return
+
+        supported_extensions = ", ".join(sorted(DARKTABLE_SUPPORTED_EXTENSIONS))
+        raise DarktableUnsupportedFormatError(
+            "Unsupported input format for Darktable: "
+            f"{input_path.suffix or '<no extension>'}. Supported extensions are: {supported_extensions}."
+        )
 
     @classmethod
     def _resolve_binary(
