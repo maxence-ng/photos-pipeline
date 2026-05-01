@@ -1,3 +1,65 @@
-"""Scoring module package."""
+"""Public scoring package surface for config and data-layer imports."""
 
-__all__: list[str] = []
+from photos_pipeline.config import (
+    DEFAULT_SCORER_BATCH_SIZE,
+    DEFAULT_SCORER_CLIP_MODEL_NAME,
+    DEFAULT_SCORER_DEVICE,
+    DEFAULT_SCORER_MODE,
+    DEFAULT_SCORER_WEIGHTS_PATH,
+    DEFAULT_SCORER_WEIGHTS_URL,
+    SCORER_MODES,
+    ScorerMode,
+)
+from photos_pipeline.modules.scoring.backend import (
+    IMAGENET_MEAN,
+    IMAGENET_STD,
+    MODEL_INPUT_SIZE,
+    AestheticScorer,
+    ClipBackend,
+    CLIPScorer,
+    CLIPScorerLoadError,
+    CLIPScorerUnavailableError,
+    NIMAScorer,
+    ScorerWeightsDownloadError,
+    ScorerWeightsError,
+    ScorerWeightsLoadError,
+    build_nima_model,
+    create_scorer,
+    download_weights,
+    expected_scores_from_model_output,
+    load_nima_model,
+    resolve_device,
+    resolve_weights_path,
+)
+from photos_pipeline.modules.scoring.records import ImageRecordScorer
+
+__all__ = [
+    "AestheticScorer",
+    "CLIPScorer",
+    "CLIPScorerLoadError",
+    "CLIPScorerUnavailableError",
+    "ClipBackend",
+    "DEFAULT_SCORER_BATCH_SIZE",
+    "DEFAULT_SCORER_CLIP_MODEL_NAME",
+    "DEFAULT_SCORER_DEVICE",
+    "DEFAULT_SCORER_MODE",
+    "DEFAULT_SCORER_WEIGHTS_PATH",
+    "DEFAULT_SCORER_WEIGHTS_URL",
+    "IMAGENET_MEAN",
+    "IMAGENET_STD",
+    "ImageRecordScorer",
+    "MODEL_INPUT_SIZE",
+    "NIMAScorer",
+    "SCORER_MODES",
+    "ScorerWeightsDownloadError",
+    "ScorerWeightsError",
+    "ScorerWeightsLoadError",
+    "ScorerMode",
+    "build_nima_model",
+    "create_scorer",
+    "download_weights",
+    "expected_scores_from_model_output",
+    "load_nima_model",
+    "resolve_device",
+    "resolve_weights_path",
+]

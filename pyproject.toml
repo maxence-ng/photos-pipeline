@@ -35,6 +35,7 @@ dependencies = [
     "python-multipart>=0.0.9",
     "exifread>=2.3",
     "imagehash>=4.3",
+    "transformers>=4.41",
 ]
 
 [project.optional-dependencies]

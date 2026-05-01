@@ -3,11 +3,35 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-__all__ = ["Settings", "get_settings"]
+ScorerMode = Literal["nima", "clip"]
+SCORER_MODES: tuple[ScorerMode, ...] = ("nima", "clip")
+DEFAULT_SCORER_MODE: ScorerMode = "nima"
+DEFAULT_SCORER_WEIGHTS_PATH = Path.home() / ".photos_pipeline" / "models" / "nima_weights.pth"
+DEFAULT_SCORER_WEIGHTS_URL = (
+    "https://s3-us-west-1.amazonaws.com/models-nima/pretrain-model.pth"
+)
+DEFAULT_SCORER_CLIP_MODEL_NAME = "openai/clip-vit-base-patch32"
+DEFAULT_SCORER_BATCH_SIZE = 16
+DEFAULT_SCORER_DEVICE = "auto"
+
+__all__ = [
+    "DEFAULT_SCORER_BATCH_SIZE",
+    "DEFAULT_SCORER_CLIP_MODEL_NAME",
+    "DEFAULT_SCORER_DEVICE",
+    "DEFAULT_SCORER_MODE",
+    "DEFAULT_SCORER_WEIGHTS_PATH",
+    "DEFAULT_SCORER_WEIGHTS_URL",
+    "SCORER_MODES",
+    "ScorerMode",
+    "Settings",
+    "get_settings",
+]
 
 
 class Settings(BaseSettings):
@@ -30,6 +54,31 @@ class Settings(BaseSettings):
     burst_gap_seconds: float = Field(default=2.0, ge=0, description="Maximum time gap in seconds between images in the same burst sequence.")
     burst_blur_weight: float = Field(default=0.6, ge=0, le=1, description="Relative weight of blur score in the burst composite score.")
     burst_aesthetic_weight: float = Field(default=0.4, ge=0, le=1, description="Relative weight of aesthetic score in the burst composite score.")
+    scorer_mode: ScorerMode = Field(
+        default=DEFAULT_SCORER_MODE,
+        description="Aesthetic scorer backend to use: 'nima' or 'clip'.",
+    )
+    scorer_weights_path: Path = Field(
+        default=DEFAULT_SCORER_WEIGHTS_PATH,
+        description="Local cache path for aesthetic scorer weights.",
+    )
+    scorer_weights_url: str = Field(
+        default=DEFAULT_SCORER_WEIGHTS_URL,
+        description="Default download URL for aesthetic scorer weights.",
+    )
+    scorer_clip_model_name: str = Field(
+        default=DEFAULT_SCORER_CLIP_MODEL_NAME,
+        description="Hugging Face model identifier used when scorer_mode='clip'.",
+    )
+    scorer_batch_size: int = Field(
+        default=DEFAULT_SCORER_BATCH_SIZE,
+        ge=1,
+        description="Maximum number of thumbnails to score per inference batch.",
+    )
+    scorer_device: str = Field(
+        default=DEFAULT_SCORER_DEVICE,
+        description="Preferred inference device ('auto', 'cpu', 'cuda', etc.).",
+    )
 
 
 @lru_cache(maxsize=1)

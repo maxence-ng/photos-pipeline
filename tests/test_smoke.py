@@ -8,7 +8,15 @@ import pytest
 from click.testing import CliRunner
 
 from photos_pipeline.cli import main
-from photos_pipeline.config import get_settings
+from photos_pipeline.config import (
+    DEFAULT_SCORER_BATCH_SIZE,
+    DEFAULT_SCORER_CLIP_MODEL_NAME,
+    DEFAULT_SCORER_DEVICE,
+    DEFAULT_SCORER_MODE,
+    DEFAULT_SCORER_WEIGHTS_PATH,
+    DEFAULT_SCORER_WEIGHTS_URL,
+    get_settings,
+)
 from photos_pipeline.modules.ingestion import ImageRecord
 
 
@@ -29,6 +37,12 @@ def test_settings_defaults() -> None:
     assert settings.burst_gap_seconds == 2.0
     assert settings.burst_blur_weight == 0.6
     assert settings.burst_aesthetic_weight == 0.4
+    assert settings.scorer_mode == DEFAULT_SCORER_MODE
+    assert settings.scorer_weights_path == DEFAULT_SCORER_WEIGHTS_PATH
+    assert settings.scorer_weights_url == DEFAULT_SCORER_WEIGHTS_URL
+    assert settings.scorer_clip_model_name == DEFAULT_SCORER_CLIP_MODEL_NAME
+    assert settings.scorer_batch_size == DEFAULT_SCORER_BATCH_SIZE
+    assert settings.scorer_device == DEFAULT_SCORER_DEVICE
 
 
 @pytest.mark.unit
@@ -44,6 +58,29 @@ def test_burst_settings_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
         assert settings.burst_gap_seconds == 1.5
         assert settings.burst_blur_weight == 0.7
         assert settings.burst_aesthetic_weight == 0.3
+    finally:
+        get_settings.cache_clear()
+
+
+@pytest.mark.unit
+def test_scoring_settings_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Scoring settings should support environment-variable overrides."""
+    monkeypatch.setenv("PHOTOS_PIPELINE_SCORER_MODE", "clip")
+    monkeypatch.setenv("PHOTOS_PIPELINE_SCORER_WEIGHTS_PATH", "C:\\models\\custom-nima.pth")
+    monkeypatch.setenv("PHOTOS_PIPELINE_SCORER_WEIGHTS_URL", "https://example.invalid/custom-nima.pth")
+    monkeypatch.setenv("PHOTOS_PIPELINE_SCORER_CLIP_MODEL_NAME", "test/clip-model")
+    monkeypatch.setenv("PHOTOS_PIPELINE_SCORER_BATCH_SIZE", "8")
+    monkeypatch.setenv("PHOTOS_PIPELINE_SCORER_DEVICE", "cpu")
+    get_settings.cache_clear()
+
+    try:
+        settings = get_settings()
+        assert settings.scorer_mode == "clip"
+        assert settings.scorer_weights_path == Path("C:\\models\\custom-nima.pth")
+        assert settings.scorer_weights_url == "https://example.invalid/custom-nima.pth"
+        assert settings.scorer_clip_model_name == "test/clip-model"
+        assert settings.scorer_batch_size == 8
+        assert settings.scorer_device == "cpu"
     finally:
         get_settings.cache_clear()
 
@@ -73,3 +110,5 @@ def test_subpackages_are_importable() -> None:
     assert isinstance(export.__all__, list)
     assert isinstance(scoring.__all__, list)
     assert isinstance(utils.__all__, list)
+    assert scoring.SCORER_MODES == ("nima", "clip")
+    assert scoring.DEFAULT_SCORER_MODE == "nima"
