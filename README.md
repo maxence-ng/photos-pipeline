@@ -43,6 +43,19 @@ Key pipeline settings are controlled via environment variables (see `src/photos_
 
 **Tuning `PHOTOS_PIPELINE_BLUR_THRESHOLD`:** The right value depends on your equipment and shooting conditions. Start with the default (`100.0`) and inspect which images get flagged. Raise the threshold if soft-focus shots from a slow zoom or kit lens are being let through; lower it if sharp primes are incorrectly flagged as blurry. There is no universally correct value — treat it as a per-camera-body/lens calibration step.
 
+## Style presets
+
+The correction module ships built-in Darktable preset stubs in
+`src/photos_pipeline/assets/styles/`:
+`natural`, `cinematic`, `portrait-warm`, `landscape`, `bw-classic`,
+`bw-high-contrast`.
+
+Custom presets can be added by placing `.dtstyle` files in
+`~/.photos_pipeline/styles/`; they are discovered alongside built-ins.
+
+When Darktable is unavailable, a minimal software fallback is available for
+`cinematic`, `bw-classic`, and `bw-high-contrast` on JPEG inputs.
+
 ## Development
 
 Run the standard project checks locally:

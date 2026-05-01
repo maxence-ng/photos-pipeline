@@ -20,9 +20,16 @@ class PipelineResult:
 class Pipeline:
     """Top-level orchestrator stub shared by CLI and API layers."""
 
-    def run(self, input_path: Path, output_path: Path) -> PipelineResult:
+    def run(
+        self,
+        input_path: Path,
+        output_path: Path,
+        *,
+        style: str | None = "natural",
+    ) -> PipelineResult:
         """Run the photo pipeline."""
         # TODO: instantiate BlurDetector(threshold=get_settings().blur_threshold) here for culling stage
         raise NotImplementedError(
-            f"Pipeline execution is defined in later specs: {input_path} -> {output_path}."
+            "Pipeline execution is defined in later specs: "
+            f"{input_path} -> {output_path} (style={style or 'none'})."
         )

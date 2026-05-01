@@ -62,6 +62,9 @@ Issues = "https://github.com/maxence-ng/photos-pipeline/issues"
 # ---------------------------------------------------------------------------
 # Hatch
 # ---------------------------------------------------------------------------
+[tool.hatch.build]
+include = ["src/photos_pipeline/assets/styles/*.dtstyle"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/photos_pipeline"]
 

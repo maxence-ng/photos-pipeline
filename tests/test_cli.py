@@ -28,4 +28,38 @@ def test_run_with_paths_raises_not_implemented(tmp_path) -> None:
     result = CliRunner().invoke(main, ["run", str(input_dir), str(output_dir)])
 
     assert result.exit_code != 0
-    assert "not implemented" in result.output.lower()
+    assert "defined in later specs" in result.output.lower()
+
+
+@pytest.mark.unit
+def test_run_accepts_style_option(tmp_path) -> None:
+    """The run command should accept a named style option."""
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    input_dir.mkdir()
+    output_dir.mkdir()
+
+    result = CliRunner().invoke(
+        main,
+        ["run", "--style", "cinematic", str(input_dir), str(output_dir)],
+    )
+
+    assert result.exit_code != 0
+    assert "style=cinematic" in result.output.lower()
+
+
+@pytest.mark.unit
+def test_run_accepts_style_none(tmp_path) -> None:
+    """The run command should allow --style none to skip style application."""
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    input_dir.mkdir()
+    output_dir.mkdir()
+
+    result = CliRunner().invoke(
+        main,
+        ["run", "--style", "none", str(input_dir), str(output_dir)],
+    )
+
+    assert result.exit_code != 0
+    assert "style=none" in result.output.lower()
